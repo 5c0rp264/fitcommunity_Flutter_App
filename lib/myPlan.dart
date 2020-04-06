@@ -1,6 +1,6 @@
 import 'dart:convert';
+import 'package:fitcommunity/popUp.dart';
 import 'package:fitcommunity/weeklyRecord.dart';
-import 'package:flutter_easyloading/flutter_easyloading.dart';
 import 'package:http/http.dart' as http;
 import 'package:fitcommunity/settingsPage.dart';
 import 'package:flutter/material.dart';
@@ -16,6 +16,7 @@ class MyPlan extends StatefulWidget {
 
 class MyPlanStateful extends State<MyPlan> {
   Future<SharedPreferences> _pref = SharedPreferences.getInstance();
+  final GlobalKey<State> _keyLoader = new GlobalKey<State>();
 
   openFile(bool shouldOpenDiet, BuildContext _context) async {
     final SharedPreferences pref = await _pref;
@@ -38,27 +39,36 @@ class MyPlanStateful extends State<MyPlan> {
     }
   }
 
-  checkConnection() async {
-
-    EasyLoading.instance.maskType = EasyLoadingMaskType.black;
-    EasyLoading.show(status: "Chargement...");
+  checkConnection(BuildContext context) async {
+    PopUp.showLoadingDialog(
+        context, _keyLoader, "Chargement..."); //invoking login
     try {
       final result = await InternetAddress.lookup('example.com')
           .timeout(Duration(milliseconds: 10000));
       if (result.isNotEmpty && result[0].rawAddress.isNotEmpty) {
-        EasyLoading.dismiss();
+        Navigator.of(context, rootNavigator: true).pop();
       }
     } on SocketException catch (_) {
-      EasyLoading.showError("Erreur, pas de connexion à internet.\n\nVeuillez relancer l'application une fois celle-ci retrouvée.",
-          duration: Duration(days: 365));
+      Navigator.of(context, rootNavigator: true).pop();
+      PopUp.show(
+          context,
+          _keyLoader,
+          false,
+          Container(
+              child: Text(
+                  "Erreur, pas de connexion à internet.\n\nVeullez relancer l'application une fois celle-ci retrouvée.",
+                  style: TextStyle(color: Colors.white),
+                  textAlign: TextAlign.center)));
     }
   }
 
   @override
   void initState() {
     super.initState();
-    Future<String>.delayed(new Duration(milliseconds: 500), () => 'never minds what\'s here').then((String value) {
-      checkConnection();
+    Future<String>.delayed(
+            new Duration(milliseconds: 500), () => 'never minds what\'s here')
+        .then((String value) {
+      checkConnection(context);
       setState(() {});
     });
   }
