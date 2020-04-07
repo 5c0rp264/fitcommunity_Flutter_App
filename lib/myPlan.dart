@@ -1,6 +1,7 @@
 import 'dart:convert';
 import 'package:fitcommunity/popUp.dart';
 import 'package:fitcommunity/weeklyRecord.dart';
+import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:http/http.dart' as http;
 import 'package:fitcommunity/settingsPage.dart';
 import 'package:flutter/material.dart';
@@ -18,13 +19,41 @@ class MyPlanStateful extends State<MyPlan> {
   Future<SharedPreferences> _pref = SharedPreferences.getInstance();
   final GlobalKey<State> _keyLoader = new GlobalKey<State>();
 
+  initNotifications() async {
+    // initialise the plugin. app_icon needs to be a added as a drawable resource to the Android head project
+    // If you have skipped STEP 3 then change app_icon to @mipmap/ic_launcher
+    var initializationSettingsAndroid = new AndroidInitializationSettings('@mipmap/launcher_icon');
+    var initializationSettingsIOS = new IOSInitializationSettings();
+    var initializationSettings = new InitializationSettings(initializationSettingsAndroid, initializationSettingsIOS);
+    final notifplugin = new FlutterLocalNotificationsPlugin();
+    notifplugin.initialize(initializationSettings, onSelectNotification: onSelectNotificationFunc);
+
+    var time = Time(9,30,0);
+    var androidPlatformChannelSpecifics = new AndroidNotificationDetails(
+        'your channel id', 'your channel name', 'your channel description',
+        importance: Importance.Max, priority: Priority.High);
+    var iOSPlatformChannelSpecifics = new IOSNotificationDetails();
+    var platformChannelSpecifics = new NotificationDetails(androidPlatformChannelSpecifics, iOSPlatformChannelSpecifics);
+    await notifplugin.showWeeklyAtDayAndTime(
+      0,
+      'Rappel',
+      'N\'oublie pas de faire ton compte-rendu !',
+      Day.Sunday,
+      time,
+      platformChannelSpecifics,
+      payload: 'Default_Sound',
+    );
+  }
+
+  Future onSelectNotificationFunc(String payload) async {
+    await Navigator.push(context, new MaterialPageRoute(builder: (context) => WeeklyRecord()));
+  }
+
   openFile(bool shouldOpenDiet, BuildContext _context) async {
     final SharedPreferences pref = await _pref;
     final token = pref.getString("token");
-    Map<String, dynamic> data = jsonDecode(await http
-        .read('https://fitcommunity.fr/espacemembre/json.php?token=' + token));
-    final url = "https://fitcommunity.fr/dietAndProgramm/" +
-        (shouldOpenDiet ? data['dietLink'] : data['programmLink']);
+    Map<String, dynamic> data = jsonDecode(await http.read('https://fitcommunity.fr/espacemembre/json.php?token=' + token));
+    final url = "https://fitcommunity.fr/dietAndProgramm/" + (shouldOpenDiet ? data['dietLink'] : data['programmLink']);
     print(shouldOpenDiet ? data['dietLink'] : data['programmLink']);
     if (await canLaunch(url)) {
       await launch(url);
@@ -32,19 +61,16 @@ class MyPlanStateful extends State<MyPlan> {
       showDialog(
           context: _context,
           builder: (context) => AlertDialog(
-                title:
-                    Text('Impossible d\'accéder à la ressource pour le moment'),
+                title: Text('Impossible d\'accéder à la ressource pour le moment'),
               ));
       throw 'Could not launch $url';
     }
   }
 
   checkConnection(BuildContext context) async {
-    PopUp.showLoadingDialog(
-        context, _keyLoader, "Chargement..."); //invoking login
+    PopUp.showLoadingDialog(context, _keyLoader, "Chargement..."); //invoking login
     try {
-      final result = await InternetAddress.lookup('example.com')
-          .timeout(Duration(milliseconds: 10000));
+      final result = await InternetAddress.lookup('example.com').timeout(Duration(milliseconds: 10000));
       if (result.isNotEmpty && result[0].rawAddress.isNotEmpty) {
         Navigator.of(context, rootNavigator: true).pop();
       }
@@ -55,19 +81,16 @@ class MyPlanStateful extends State<MyPlan> {
           _keyLoader,
           false,
           Container(
-              child: Text(
-                  "Erreur, pas de connexion à internet.\n\nVeullez relancer l'application une fois celle-ci retrouvée.",
-                  style: TextStyle(color: Colors.white),
-                  textAlign: TextAlign.center)));
+              child: Text("Erreur, pas de connexion à internet.\n\nVeullez relancer l'application une fois celle-ci retrouvée.",
+                  style: TextStyle(color: Colors.white), textAlign: TextAlign.center)));
     }
   }
 
   @override
   void initState() {
     super.initState();
-    Future<String>.delayed(
-            new Duration(milliseconds: 500), () => 'never minds what\'s here')
-        .then((String value) {
+    initNotifications();
+    Future<String>.delayed(new Duration(milliseconds: 500), () => 'never minds what\'s here').then((String value) {
       checkConnection(context);
       setState(() {});
     });
@@ -99,10 +122,7 @@ class MyPlanStateful extends State<MyPlan> {
                 backgroundColor: Colors.redAccent[700],
                 foregroundColor: Colors.black,
                 onPressed: () async {
-                  await Navigator.push(
-                      context,
-                      new MaterialPageRoute(
-                          builder: (context) => SettingsPage()));
+                  await Navigator.push(context, new MaterialPageRoute(builder: (context) => SettingsPage()));
                 },
                 child: Icon(Icons.settings),
               ),
@@ -115,10 +135,7 @@ class MyPlanStateful extends State<MyPlan> {
                 foregroundColor: Colors.black,
                 heroTag: 'weeklyReport',
                 onPressed: () async {
-                  await Navigator.push(
-                      context,
-                      new MaterialPageRoute(
-                          builder: (context) => WeeklyRecord()));
+                  await Navigator.push(context, new MaterialPageRoute(builder: (context) => WeeklyRecord()));
                 },
                 child: Icon(Icons.save),
                 shape: RoundedRectangleBorder(

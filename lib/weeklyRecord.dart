@@ -292,11 +292,23 @@ class WeeklyRecordState extends State<StatefulWidget> {
                                       _imageF == null ||
                                       _imageR == null ||
                                       _imageL == null) {
-                                    PopUp.show(context, _keyLoader, true, Text("Veuillez remplir tout les champs"));
+                                    PopUp.show(context, _keyLoader, true, Column(
+                                      children: <Widget>[
+                                        Icon(Icons.clear, size: 50, color: Colors.red),
+                                        Text("Veuillez compléter tous les champs.",
+                                            style: TextStyle(color: Colors.white), textAlign: TextAlign.center),
+                                      ],
+                                    ));
                                   } else if ((await SharedPreferences.getInstance()).getString("token") == "" ||
                                       (await SharedPreferences.getInstance()).getString("token") == null) {
                                     PopUp.show(
-                                        context, _keyLoader, true, Text("Veuillez rentrer votre token dans les paramètres"));
+                                        context, _keyLoader, true, Column(
+                                    children: <Widget>[
+                                    Icon(Icons.clear, size: 50, color: Colors.red),
+                                  Text("Veuillez rentrer votre token dans les paramètres.",
+                                  style: TextStyle(color: Colors.white), textAlign: TextAlign.center),
+                                  ],
+                                  ));
                                   } else {
                                     PopUp.showLoadingDialog(context, _keyLoader, "Envoi en cours..."); //invoking login
                                     var dio = Dio();
@@ -331,6 +343,8 @@ class WeeklyRecordState extends State<StatefulWidget> {
                                               ],
                                             ));
                                       } else {
+                                        Navigator.of(context, rootNavigator: true).pop();
+                                        sleep(Duration(milliseconds: 500));
                                         PopUp.show(
                                             context,
                                             _keyLoader,
@@ -341,9 +355,10 @@ class WeeklyRecordState extends State<StatefulWidget> {
                                                 Text(response['resp'].toString(),
                                                     style: TextStyle(color: Colors.white), textAlign: TextAlign.center),
                                               ],
-                                            ));
+                                            )
+                                        );
                                       }
-                                    } on DioError catch (e) {
+                                    } on DioError catch (_) {
                                       PopUp.show(
                                           context,
                                           _keyLoader,

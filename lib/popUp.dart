@@ -43,7 +43,7 @@ class PopUp {
         barrierDismissible: dismissable,
         builder: (BuildContext context) {
           return new WillPopScope(
-              onWillPop: () async => false,
+              onWillPop: () async => dismissable,
               child: SimpleDialog(
                   shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.all(Radius.circular(20.0))),
