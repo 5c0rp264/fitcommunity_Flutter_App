@@ -19,6 +19,16 @@ class MyPlanStateful extends State<MyPlan> {
   Future<SharedPreferences> _pref = SharedPreferences.getInstance();
   final GlobalKey<State> _keyLoader = new GlobalKey<State>();
 
+  checkToken(BuildContext context) async{
+    final SharedPreferences pref = await _pref;
+    final token = (pref.getString("token") ?? "");
+    if (token == "" ){
+      PopUp.show(context, _keyLoader, true, Container(
+          child: Text("Veuillez renter votre token dans les paramètres de l'application.",
+              style: TextStyle(color: Colors.white), textAlign: TextAlign.center)));
+    }
+  }
+
   initNotifications() async {
     // initialise the plugin. app_icon needs to be a added as a drawable resource to the Android head project
     // If you have skipped STEP 3 then change app_icon to @mipmap/ic_launcher
@@ -30,7 +40,7 @@ class MyPlanStateful extends State<MyPlan> {
 
     var time = Time(9,30,0);
     var androidPlatformChannelSpecifics = new AndroidNotificationDetails(
-        'your channel id', 'your channel name', 'your channel description',
+        'channelIdFitCommunity', 'FitCommunityFrance', 'Rappel d\'envoie de compte-rendu',
         importance: Importance.Max, priority: Priority.High);
     var iOSPlatformChannelSpecifics = new IOSNotificationDetails();
     var platformChannelSpecifics = new NotificationDetails(androidPlatformChannelSpecifics, iOSPlatformChannelSpecifics);
@@ -92,8 +102,10 @@ class MyPlanStateful extends State<MyPlan> {
     initNotifications();
     Future<String>.delayed(new Duration(milliseconds: 500), () => 'never minds what\'s here').then((String value) {
       checkConnection(context);
+      checkToken(context);
       setState(() {});
     });
+
   }
 
   @override
