@@ -1,6 +1,8 @@
 import 'dart:convert';
+import 'package:after_layout/after_layout.dart';
 import 'package:fitcommunity/popUp.dart';
 import 'package:fitcommunity/weeklyRecord.dart';
+//import 'package:flutter/scheduler.dart' hide Priority;
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:http/http.dart' as http;
 import 'package:fitcommunity/settingsPage.dart';
@@ -15,17 +17,21 @@ class MyPlan extends StatefulWidget {
   State<MyPlan> createState() => MyPlanStateful();
 }
 
-class MyPlanStateful extends State<MyPlan> {
+class MyPlanStateful extends State<MyPlan> with AfterLayoutMixin<MyPlan>{
   Future<SharedPreferences> _pref = SharedPreferences.getInstance();
   final GlobalKey<State> _keyLoader = new GlobalKey<State>();
 
-  checkToken(BuildContext context) async{
+  Future<void> checkToken(BuildContext context) async {
     final SharedPreferences pref = await _pref;
     final token = (pref.getString("token") ?? "");
-    if (token == "" ){
-      PopUp.show(context, _keyLoader, true, Container(
-          child: Text("Veuillez renter votre token dans les paramètres de l'application.",
-              style: TextStyle(color: Colors.white), textAlign: TextAlign.center)));
+    if (token == "") {
+      PopUp.show(
+          context,
+          _keyLoader,
+          true,
+          Container(
+              child: Text("Veuillez renter votre token dans les paramètres de l'application.",
+                  style: TextStyle(color: Colors.white), textAlign: TextAlign.center)));
     }
   }
 
@@ -37,7 +43,7 @@ class MyPlanStateful extends State<MyPlan> {
     final notifplugin = new FlutterLocalNotificationsPlugin();
     notifplugin.initialize(initializationSettings, onSelectNotification: onSelectNotificationFunc);
 
-    var time = Time(9,30,0);
+    var time = Time(9, 30, 0);
     var androidPlatformChannelSpecifics = new AndroidNotificationDetails(
         'channelIdFitCommunity', 'FitCommunityFrance', 'Rappel d\'envoie de compte-rendu',
         importance: Importance.Max, priority: Priority.High);
@@ -76,8 +82,9 @@ class MyPlanStateful extends State<MyPlan> {
     }
   }
 
-  checkConnection(BuildContext context) async {
+  /*Future<void> checkConnection(BuildContext context) async {
     PopUp.showLoadingDialog(context, _keyLoader, "Chargement..."); //invoking login
+    Future.delayed(Duration(milliseconds: 1000));
     try {
       final result = await InternetAddress.lookup('example.com').timeout(Duration(milliseconds: 10000));
       if (result.isNotEmpty && result[0].rawAddress.isNotEmpty) {
@@ -93,18 +100,29 @@ class MyPlanStateful extends State<MyPlan> {
               child: Text("Erreur, pas de connexion à internet.\n\nVeullez relancer l'application une fois celle-ci retrouvée.",
                   style: TextStyle(color: Colors.white), textAlign: TextAlign.center)));
     }
-  }
+  }*/
 
   @override
   void initState() {
     super.initState();
     initNotifications();
-    Future<String>.delayed(new Duration(milliseconds: 500), () => 'never minds what\'s here').then((String value) {
-      checkConnection(context);
+    /*SchedulerBinding.instance.addPostFrameCallback((_) {
+      //Future<String>.delayed(new Duration(milliseconds: 0), () => 'never minds what\'s here').then((String value) {
+        checkConnection(context);
+        /*setState(() {});
+      });*/
       checkToken(context);
-      setState(() {});
-    });
+    });*/
 
+  }
+
+  @override
+  void afterFirstLayout(BuildContext context) {
+    // Calling the same function "after layout" to resolve the issue.
+    //Future.delayed(Duration(milliseconds: 1000));
+    //checkConnection(context);
+    //Future.delayed(Duration(milliseconds: 100));
+    checkToken(context);
   }
 
   @override

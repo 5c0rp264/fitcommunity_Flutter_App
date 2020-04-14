@@ -8,8 +8,6 @@ void main() {
 class MyApp extends StatelessWidget {
   // This widget is the root of your application.
 
-  //TODO: add first time screen
-
 
   @override
   Widget build(BuildContext context) {
