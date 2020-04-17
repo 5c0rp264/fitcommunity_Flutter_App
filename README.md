@@ -1,6 +1,6 @@
 # fitcommunity
 
-Flutter app connected to [fitcommunity.fr](fitcommunity.fr) website
+Flutter app connected to [fitcommunity.fr](http://fitcommunity.fr) website
 
 ## Getting Started
 
